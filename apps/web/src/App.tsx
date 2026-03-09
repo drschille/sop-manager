@@ -7,10 +7,33 @@ import { LoginPage } from "./pages/LoginPage";
 import { SearchPage } from "./pages/SearchPage";
 import { SopDetailPage } from "./pages/SopDetailPage";
 
-function ProtectedRoutes() {
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const auth = useAuth();
+  if (!auth.isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+}
+
+function LoginRoute() {
+  const auth = useAuth();
+  if (auth.isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+  return <LoginPage />;
+}
+
+function AppRoutes() {
   return (
     <Routes>
-      <Route element={<AppShell />}>
+      <Route path="/login" element={<LoginRoute />} />
+      <Route
+        element={(
+          <ProtectedRoute>
+            <AppShell />
+          </ProtectedRoute>
+        )}
+      >
         <Route path="/" element={<SearchPage />} />
         <Route path="/parts/new" element={<EditSopPage />} />
         <Route path="/parts/:partNumber" element={<SopDetailPage />} />
@@ -30,9 +53,5 @@ export default function App() {
     return <p className="centered">Loading authentication...</p>;
   }
 
-  if (!auth.isAuthenticated) {
-    return <LoginPage />;
-  }
-
-  return <ProtectedRoutes />;
+  return <AppRoutes />;
 }

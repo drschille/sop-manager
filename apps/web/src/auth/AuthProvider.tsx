@@ -7,6 +7,7 @@ import { getActiveAccount, getIdToken, initMsal, signIn, signOut } from "./msal"
 type AuthContextValue = {
   initialized: boolean;
   isAuthenticated: boolean;
+  authError: string | null;
   profileName: string | null;
   profileEmail: string | null;
   backendUser:
@@ -27,6 +28,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [initialized, setInitialized] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [profileName, setProfileName] = useState<string | null>(null);
   const [profileEmail, setProfileEmail] = useState<string | null>(null);
 
@@ -41,15 +43,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (account) {
           setProfileName(account.name ?? null);
           setProfileEmail(account.username ?? null);
-          convex.setAuth(getIdToken, (authed) => {
+          convex.setAuth(async () => {
+            try {
+              return await getIdToken();
+            } catch (error) {
+              setAuthError(error instanceof Error ? error.message : "Authentication failed");
+              return null;
+            }
+          }, (authed) => {
             if (!cancelled) {
               setIsAuthenticated(authed);
+              if (authed) {
+                setAuthError(null);
+              }
             }
           });
         } else {
           convex.clearAuth();
           setIsAuthenticated(false);
         }
+      } catch (error) {
+        setAuthError(error instanceof Error ? error.message : "Failed to initialize authentication");
       } finally {
         if (!cancelled) {
           setInitialized(true);
@@ -72,16 +86,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       initialized,
       isAuthenticated,
+      authError,
       profileName,
       profileEmail,
       backendUser,
-      signIn,
+      signIn: async () => {
+        setAuthError(null);
+        await signIn();
+      },
       signOut: async () => {
         convex.clearAuth();
+        setAuthError(null);
         await signOut();
       },
     }),
-    [initialized, isAuthenticated, profileName, profileEmail, backendUser],
+    [initialized, isAuthenticated, authError, profileName, profileEmail, backendUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
