@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import no.designsolutions.sopmanager.composeapp.logging.AppLogger
 import no.designsolutions.sopmanager.composeapp.model.PartSearchResult
 
 @Composable
@@ -102,6 +103,10 @@ fun SearchScreen(
                                     }
                                 },
                                 onFailure = {
+                                    AppLogger.e(
+                                        "Thumbnail load failed for ${result.partNumber} (${result.thumbnailUrl})",
+                                        it,
+                                    )
                                     Box(
                                         modifier = Modifier
                                             .size(72.dp)

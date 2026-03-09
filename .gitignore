@@ -42,3 +42,4 @@ apps/mobile/!*.xcodeproj/project.xcworkspace/
 apps/mobile/!*.xcworkspace/contents.xcworkspacedata
 apps/mobile/**/xcshareddata/WorkspaceSettings.xcsettings
 apps/mobile/node_modules/
+.gradle-local

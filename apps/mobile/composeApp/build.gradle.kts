@@ -38,7 +38,7 @@ kotlin {
     implementation(libs.compose.ui.backhandler)
     implementation(libs.compose.components.resources)
     implementation(libs.compose.uiToolingPreview)
-    implementation(libs.kamel.image)
+    implementation(libs.kamel.image.default)
     implementation(libs.androidx.lifecycle.viewmodelCompose)
     implementation(libs.androidx.lifecycle.runtimeCompose)
 
