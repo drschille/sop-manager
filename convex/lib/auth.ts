@@ -2,6 +2,11 @@ import type { QueryCtx, MutationCtx, ActionCtx } from "../_generated/server";
 
 type Ctx = QueryCtx | MutationCtx | ActionCtx;
 
+function getEnv(name: string): string | undefined {
+  const maybeProcess = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process;
+  return maybeProcess?.env?.[name];
+}
+
 export async function requireUser(ctx: Ctx) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
@@ -12,7 +17,7 @@ export async function requireUser(ctx: Ctx) {
 
 export async function requireTenant(ctx: Ctx) {
   const identity = await requireUser(ctx);
-  const tenantId = process.env.ENTRA_TENANT_ID;
+  const tenantId = getEnv("ENTRA_TENANT_ID");
 
   if (!tenantId) {
     // Local/dev fallback: when tenant ID is not configured, only require auth.
