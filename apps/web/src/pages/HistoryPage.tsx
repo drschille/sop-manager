@@ -67,7 +67,7 @@ export function HistoryPage() {
           {!selectedVersion.photos.length && <p className="muted">No photos in this version</p>}
           {!!selectedVersion.photos.length && (
             <div className="gallery">
-              {selectedVersion.photos.map((photo: { storageId: string; url: string | null; description?: string }) => (
+              {selectedVersion.photos.map((photo: { storageId: string; url: string | null; description?: string }, index: number) => (
                 <div key={photo.storageId} className="gallery-item">
                   {photo.url ? (
                     <img
@@ -77,7 +77,12 @@ export function HistoryPage() {
                   ) : (
                     <span>Missing photo</span>
                   )}
-                  {photo.description?.trim() && <p className="photo-caption">{photo.description}</p>}
+                  {photo.description?.trim() && (
+                    <div className="photo-instruction">
+                      <h3>Step {index + 1}</h3>
+                      <p className="preserve-lines">{photo.description}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

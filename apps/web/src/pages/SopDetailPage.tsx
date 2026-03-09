@@ -64,7 +64,7 @@ export function SopDetailPage() {
         {!data.currentVersion.photos.length && <p className="muted">No photos</p>}
         {!!data.currentVersion.photos.length && (
           <div className="gallery">
-            {data.currentVersion.photos.map((photo: { storageId: string; url: string | null; description?: string }) => (
+            {data.currentVersion.photos.map((photo: { storageId: string; url: string | null; description?: string }, index: number) => (
               <div key={photo.storageId} className="gallery-item">
                 {photo.url ? (
                   <img
@@ -74,7 +74,12 @@ export function SopDetailPage() {
                 ) : (
                   <span>Missing photo</span>
                 )}
-                {photo.description?.trim() && <p className="photo-caption">{photo.description}</p>}
+                {photo.description?.trim() && (
+                  <div className="photo-instruction">
+                    <h3>Step {index + 1}</h3>
+                    <p className="preserve-lines">{photo.description}</p>
+                  </div>
+                )}
               </div>
             ))}
           </div>

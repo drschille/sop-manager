@@ -140,15 +140,15 @@ button:hover {
 
 .gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
 }
 
 .gallery-item {
   border: 1px solid #d7e0ee;
   border-radius: 10px;
   overflow: hidden;
-  min-height: 120px;
+  min-height: 220px;
   display: grid;
   align-content: start;
   background: #f8fbff;
@@ -157,16 +157,30 @@ button:hover {
 .gallery-item img,
 .photo-preview img {
   width: 100%;
-  height: 140px;
+  height: 240px;
   object-fit: cover;
 }
 
-.photo-caption {
+.photo-instruction {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border-top: 1px solid #d7e0ee;
+  background: #ffffff;
+}
+
+.photo-instruction h3 {
   margin: 0;
-  padding: 8px 10px 10px;
   font-size: 0.9rem;
-  line-height: 1.3;
+  color: #1d4ed8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.photo-instruction p {
+  margin: 0;
   color: #334155;
+  line-height: 1.35;
 }
 
 .photo-list {
@@ -183,7 +197,9 @@ button:hover {
   padding: 12px;
   display: grid;
   gap: 10px;
-  grid-template-columns: 96px 1fr;
+  grid-template-columns: 30px 96px 1fr;
+  align-items: start;
+  position: relative;
 }
 
 .photo-preview {
@@ -197,6 +213,68 @@ button:hover {
 .photo-actions {
   display: grid;
   gap: 6px;
+}
+
+.photo-item-dragging {
+  opacity: 0.7;
+}
+
+.photo-item-drag-over {
+  border: 2px solid #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.18);
+}
+
+.photo-action-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.drag-handle-left {
+  width: 30px;
+  min-height: 96px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 4px;
+  border: 1px solid #cad6ea;
+  border-radius: 8px;
+  background: #f8fbff;
+  cursor: grab;
+  padding: 8px 0;
+}
+
+.drag-handle-left:active {
+  cursor: grabbing;
+}
+
+.burger-line {
+  width: 14px;
+  height: 2px;
+  border-radius: 2px;
+  background: #64748b;
+}
+
+.remove-photo-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid #f1b5b5;
+  background: #fff1f1;
+  color: #b91c1c;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.remove-photo-button:hover {
+  background: #ffe4e4;
 }
 
 .photo-name {
@@ -227,7 +305,23 @@ label {
     align-items: flex-start;
   }
 
+  .gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .gallery-item img {
+    height: 220px;
+  }
+
   .photo-item {
     grid-template-columns: 1fr;
+  }
+
+  .drag-handle-left {
+    width: 100%;
+    min-height: auto;
+    grid-auto-flow: column;
+    justify-content: start;
+    padding: 8px 10px;
   }
 }
