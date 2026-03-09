@@ -9,6 +9,7 @@ RUN npm ci
 
 COPY apps/web apps/web
 COPY tsconfig.json tsconfig.json
+COPY convex convex
 
 ARG VITE_CONVEX_URL
 ARG VITE_ENTRA_TENANT_ID
@@ -23,6 +24,7 @@ ENV VITE_ENTRA_REDIRECT_URI=${VITE_ENTRA_REDIRECT_URI}
 ENV VITE_MOCK_AUTH=${VITE_MOCK_AUTH}
 
 # RUN npx convex dev --local --run "echo 'Generating Convex files...'"
+RUN npm run convex:codegen
 RUN npm --workspace apps/web run build
 
 FROM nginx:1.27-alpine
