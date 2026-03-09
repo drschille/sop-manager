@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -17,10 +16,7 @@ fun HistoryScreen(
     versions: List<SopVersion>,
     selectedVersion: SopVersion?,
     onSelectVersion: (SopVersion) -> Unit,
-    onBack: () -> Unit,
 ) {
-    Text("Version History", style = MaterialTheme.typography.headlineMedium)
-
     if (versions.isEmpty()) {
         Text("No versions found")
     } else {
@@ -39,9 +35,5 @@ fun HistoryScreen(
     selectedVersion?.let { version ->
         Text("Selected: v${version.versionNumber}")
         Text(version.body)
-    }
-
-    Button(onClick = onBack) {
-        Text("Back")
     }
 }

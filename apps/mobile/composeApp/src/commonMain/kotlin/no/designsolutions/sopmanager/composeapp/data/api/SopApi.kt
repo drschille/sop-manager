@@ -1,8 +1,19 @@
 package no.designsolutions.sopmanager.composeapp.data.api
 
 import com.kansson.kmp.convex.core.ConvexFunction
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.longOrNull
 import no.designsolutions.sopmanager.composeapp.model.PhotoRef
 import no.designsolutions.sopmanager.composeapp.model.SopVersion
 
@@ -145,7 +156,9 @@ data class SearchItemResponse(
 @Serializable
 data class VersionListItemResponse(
     @SerialName("_id") val id: String,
+    @Serializable(with = FlexibleIntSerializer::class)
     val versionNumber: Int,
+    @Serializable(with = FlexibleLongSerializer::class)
     val createdAt: Long,
     val createdBy: String,
     val title: String,
@@ -154,9 +167,11 @@ data class VersionListItemResponse(
 @Serializable
 data class VersionResponse(
     @SerialName("_id") val id: String,
+    @Serializable(with = FlexibleIntSerializer::class)
     val versionNumber: Int,
     val title: String,
     val body: String,
+    @Serializable(with = FlexibleLongSerializer::class)
     val createdAt: Long,
     val createdBy: String,
     val photos: List<PhotoResponse> = emptyList(),
@@ -174,6 +189,44 @@ data class CurrentUserResponse(
     val email: String? = null,
     val name: String? = null,
 )
+
+object FlexibleLongSerializer : KSerializer<Long> {
+  override val descriptor: SerialDescriptor =
+      PrimitiveSerialDescriptor("FlexibleLong", PrimitiveKind.LONG)
+
+  override fun serialize(encoder: Encoder, value: Long) {
+    encoder.encodeLong(value)
+  }
+
+  override fun deserialize(decoder: Decoder): Long {
+    val jsonPrimitive = (decoder as? JsonDecoder)?.decodeJsonElement() as? JsonPrimitive
+    if (jsonPrimitive != null) {
+      jsonPrimitive.longOrNull?.let { return it }
+      jsonPrimitive.doubleOrNull?.let { return it.toLong() }
+      jsonPrimitive.contentOrNull?.toDoubleOrNull()?.let { return it.toLong() }
+    }
+    return decoder.decodeLong()
+  }
+}
+
+object FlexibleIntSerializer : KSerializer<Int> {
+  override val descriptor: SerialDescriptor =
+      PrimitiveSerialDescriptor("FlexibleInt", PrimitiveKind.INT)
+
+  override fun serialize(encoder: Encoder, value: Int) {
+    encoder.encodeInt(value)
+  }
+
+  override fun deserialize(decoder: Decoder): Int {
+    val jsonPrimitive = (decoder as? JsonDecoder)?.decodeJsonElement() as? JsonPrimitive
+    if (jsonPrimitive != null) {
+      jsonPrimitive.longOrNull?.let { return it.toInt() }
+      jsonPrimitive.doubleOrNull?.let { return it.toInt() }
+      jsonPrimitive.contentOrNull?.toDoubleOrNull()?.let { return it.toInt() }
+    }
+    return decoder.decodeInt()
+  }
+}
 
 fun VersionResponse.toSopVersion(): SopVersion {
   return SopVersion(

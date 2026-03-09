@@ -3,7 +3,6 @@ package no.designsolutions.sopmanager.composeapp.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
@@ -16,9 +15,7 @@ fun SopDetailScreen(
     onCreate: () -> Unit,
     onEdit: () -> Unit,
     onHistory: () -> Unit,
-    onBack: () -> Unit,
 ) {
-    Text("SOP Detail", style = MaterialTheme.typography.headlineMedium)
     Text("Part: $partNumber")
 
     val latest = detail?.latest
@@ -45,8 +42,5 @@ fun SopDetailScreen(
                 Text("History")
             }
         }
-    }
-    Button(onClick = onBack) {
-        Text("Back")
     }
 }

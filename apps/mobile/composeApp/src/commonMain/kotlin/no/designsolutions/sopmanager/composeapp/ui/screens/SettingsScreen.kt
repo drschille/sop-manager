@@ -11,7 +11,6 @@ fun SettingsScreen(
     onTestBackend: () -> Unit,
     onSignOut: () -> Unit,
 ) {
-    Text("Settings", style = MaterialTheme.typography.headlineMedium)
     Text("Signed in user: $signedInUser")
     Button(onClick = onTestBackend) {
         Text("Test Backend")

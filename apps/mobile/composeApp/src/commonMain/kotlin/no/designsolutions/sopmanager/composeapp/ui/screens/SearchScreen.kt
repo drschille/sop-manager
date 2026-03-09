@@ -33,23 +33,16 @@ fun SearchScreen(
     onPartNumberChange: (String) -> Unit,
     results: List<PartSearchResult>,
     onSearch: () -> Unit,
-    onBack: () -> Unit,
     onSelectResult: (PartSearchResult) -> Unit,
 ) {
-    Text("Search", style = MaterialTheme.typography.headlineMedium)
     OutlinedTextField(
         value = partNumber,
         onValueChange = onPartNumberChange,
         label = { Text("Part number") },
         modifier = Modifier.fillMaxWidth(),
     )
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Button(onClick = onSearch) {
-            Text("Search")
-        }
-        Button(onClick = onBack) {
-            Text("Back")
-        }
+    Button(onClick = onSearch) {
+        Text("Search")
     }
 
     if (results.isNotEmpty()) {

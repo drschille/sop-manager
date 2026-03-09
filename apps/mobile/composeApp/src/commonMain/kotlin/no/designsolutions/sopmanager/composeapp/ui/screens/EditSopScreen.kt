@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,9 +20,7 @@ fun EditSopScreen(
     onBodyChange: (String) -> Unit,
     onPhotoDescriptionChange: (Int, String) -> Unit,
     onSave: () -> Unit,
-    onCancel: () -> Unit,
 ) {
-    Text("Create / Edit SOP", style = MaterialTheme.typography.headlineMedium)
     OutlinedTextField(
         value = title,
         onValueChange = onTitleChange,
@@ -53,8 +50,5 @@ fun EditSopScreen(
 
     Button(onClick = onSave) {
         Text("Save SOP")
-    }
-    Button(onClick = onCancel) {
-        Text("Cancel")
     }
 }

@@ -13,7 +13,6 @@ fun HomeScreen(
     onSearch: () -> Unit,
     onSettings: () -> Unit,
 ) {
-    Text("Home", style = MaterialTheme.typography.headlineMedium)
     Button(modifier = Modifier.fillMaxWidth(), onClick = onScanQr) {
         Text("Scan QR")
     }

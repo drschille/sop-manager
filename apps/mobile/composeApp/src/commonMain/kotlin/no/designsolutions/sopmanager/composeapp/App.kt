@@ -33,6 +33,7 @@ import no.designsolutions.sopmanager.composeapp.logging.AppLogger
 import no.designsolutions.sopmanager.composeapp.qr.QrParser
 import no.designsolutions.sopmanager.composeapp.qr.provideQrScanner
 import no.designsolutions.sopmanager.composeapp.repository.SopRepository
+import no.designsolutions.sopmanager.composeapp.ui.components.AppTopBar
 import no.designsolutions.sopmanager.composeapp.ui.screens.EditSopScreen
 import no.designsolutions.sopmanager.composeapp.ui.screens.HistoryScreen
 import no.designsolutions.sopmanager.composeapp.ui.screens.HomeScreen
@@ -97,6 +98,22 @@ fun App() {
             AppLogger.i("Navigation reset -> $route")
         }
 
+        val currentRoute = (backStack.lastOrNull() as? AppRoute) ?: AppRoute.SignIn
+        val showTopBar = currentRoute != AppRoute.SignIn
+        fun routeTitle(route: AppRoute): String =
+            when (route) {
+                AppRoute.SignIn -> "SOP Manager"
+                AppRoute.Home -> "Home"
+                AppRoute.Search -> "Search"
+                AppRoute.SopDetail -> "SOP Detail"
+                AppRoute.Edit -> "Edit SOP"
+                AppRoute.History -> "History"
+                AppRoute.Settings -> "Settings"
+            }
+        val topBarTitle = routeTitle(currentRoute)
+        val previousRoute = backStack.getOrNull(backStack.lastIndex - 1) as? AppRoute
+        val backLabel = previousRoute?.let(::routeTitle)
+
         val activeEntries = rememberDecoratedNavEntries(
             backStack = backStack,
             entryDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator<NavKey>()),
@@ -137,7 +154,6 @@ fun App() {
                         onPartNumberChange = vm::updatePartNumber,
                         results = vm.searchResults,
                         onSearch = vm::searchParts,
-                        onBack = ::goBack,
                         onSelectResult = { result ->
                             vm.loadProcedureByPart(result.partNumber) { navigateTo(AppRoute.SopDetail) }
                         },
@@ -157,7 +173,6 @@ fun App() {
                             navigateTo(AppRoute.Edit)
                         },
                         onHistory = { navigateTo(AppRoute.History) },
-                        onBack = ::goBack,
                     )
                 }
 
@@ -170,7 +185,6 @@ fun App() {
                         onBodyChange = vm::updateSopBody,
                         onPhotoDescriptionChange = vm::updatePhotoDescription,
                         onSave = { vm.saveSop(::goBack) },
-                        onCancel = ::goBack,
                     )
                 }
 
@@ -183,7 +197,6 @@ fun App() {
                         versions = vm.versionList,
                         selectedVersion = vm.selectedVersion,
                         onSelectVersion = vm::selectVersion,
-                        onBack = ::goBack,
                     )
                 }
 
@@ -202,7 +215,19 @@ fun App() {
             goBack()
         }
 
-        Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            topBar = {
+                if (showTopBar) {
+                    AppTopBar(
+                        title = topBarTitle,
+                        canNavigateBack = backStack.size > 1,
+                        backLabel = backLabel,
+                        onBack = ::goBack,
+                    )
+                }
+            },
+        ) { padding ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
