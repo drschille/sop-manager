@@ -4,7 +4,9 @@
       <stop offset="0" stop-color="#0a58ca" />
       <stop offset="1" stop-color="#1f2937" />
     </linearGradient>
-
+    <clipPath id="o-clip">
+      <rect x="46" y="0" width="39" height="128" />
+    </clipPath>
   </defs>
 
   <rect width="128" height="128" rx="28" fill="url(#g)" />
@@ -14,8 +16,7 @@
   </g>
 
   <g clip-path="url(#o-clip)">
-    <text x="36" y="86" font-size="76" font-family="Segoe UI, Tahoma, sans-serif" font-weight="900" fill="#ffffff">O</text>
-    
+    <text x="32" y="92" font-size="86" font-family="Segoe UI, Tahoma, sans-serif" font-weight="900" fill="#ffffff">O</text>
   </g>
 
 </svg>
