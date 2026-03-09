@@ -5,6 +5,17 @@ import { api } from "../../../../convex/_generated/api";
 export function SopDetailPage() {
   const { partNumber = "" } = useParams();
   const decodedPartNumber = decodeURIComponent(partNumber);
+
+  if (!decodedPartNumber.trim()) {
+    return (
+      <div className="card">
+        <h1>Invalid part</h1>
+        <p className="muted">No part number was provided.</p>
+        <Link to="/">Back to search</Link>
+      </div>
+    );
+  }
+
   const data = useQuery(api.procedures.getByPartNumber, {
     partNumber: decodedPartNumber,
   });
@@ -50,12 +61,12 @@ export function SopDetailPage() {
 
       <div className="card">
         <h2>Photos</h2>
-        {!data.currentVersion.photos.length && <p>No photos</p>}
+        {!data.currentVersion.photos.length && <p className="muted">No photos</p>}
         {!!data.currentVersion.photos.length && (
           <div className="gallery">
             {data.currentVersion.photos.map((photo) => (
               <div key={photo.storageId} className="gallery-item">
-                {photo.url ? <img src={photo.url} alt={data.currentVersion.title} /> : <span>Missing photo</span>}
+                {photo.url ? <img src={photo.url} alt={`${data.currentVersion.title} photo`} /> : <span>Missing photo</span>}
               </div>
             ))}
           </div>

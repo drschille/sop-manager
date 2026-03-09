@@ -4,23 +4,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { api } from "../../../../convex/_generated/api";
 import { PhotoListEditor, type PhotoItem } from "../components/PhotoListEditor";
-
-async function uploadToConvex(uploadUrl: string, file: File): Promise<Id<"_storage">> {
-  const response = await fetch(uploadUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": file.type || "application/octet-stream",
-    },
-    body: file,
-  });
-
-  if (!response.ok) {
-    throw new Error(`Upload failed: ${response.status}`);
-  }
-
-  const body = (await response.json()) as { storageId: Id<"_storage"> };
-  return body.storageId;
-}
+import { toErrorMessage } from "../lib/errors";
+import { uploadToConvexStorage } from "../lib/photos";
 
 export function EditSopPage() {
   const navigate = useNavigate();
@@ -49,6 +34,8 @@ export function EditSopPage() {
   const [body, setBody] = useState("");
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [initializedFromProcedure, setInitializedFromProcedure] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const createProcedure = useMutation(api.procedures.create);
@@ -56,16 +43,37 @@ export function EditSopPage() {
   const generateUploadUrl = useMutation(api.photos.generateUploadUrl);
 
   useEffect(() => {
-    if (!isCreate && procedure) {
+    if (!isCreate && procedure && !initializedFromProcedure) {
       setPart(procedure.part?.partNumber ?? "");
       setTitle(procedure.currentVersion?.title ?? "");
       setBody(procedure.currentVersion?.body ?? "");
       setPhotos(existingPhotos);
+      setInitializedFromProcedure(true);
     }
-  }, [isCreate, procedure, existingPhotos]);
+  }, [isCreate, procedure, existingPhotos, initializedFromProcedure]);
+
+  useEffect(() => {
+    return () => {
+      for (const photo of photos) {
+        if (photo.url?.startsWith("blob:")) {
+          URL.revokeObjectURL(photo.url);
+        }
+      }
+    };
+  }, [photos]);
 
   if (!isCreate && !procedure) {
-    return <p>Loading...</p>;
+    return <p>Loading SOP...</p>;
+  }
+
+  if (!isCreate && procedure === null) {
+    return (
+      <section className="card stack">
+        <h1>SOP not found</h1>
+        <p className="muted">This procedure does not exist or is no longer available.</p>
+        <Link to="/">Back to search</Link>
+      </section>
+    );
   }
 
   const onUpload = async (files: FileList | null) => {
@@ -74,12 +82,13 @@ export function EditSopPage() {
     }
 
     setError(null);
+    setIsUploading(true);
 
     try {
       const next: PhotoItem[] = [];
       for (const file of Array.from(files)) {
         const upload = await generateUploadUrl({});
-        const storageId = await uploadToConvex(upload.uploadUrl, file);
+        const storageId = await uploadToConvexStorage(upload.uploadUrl, file);
         next.push({
           storageId,
           url: URL.createObjectURL(file),
@@ -88,7 +97,9 @@ export function EditSopPage() {
       }
       setPhotos((prev) => [...prev, ...next]);
     } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : "Upload failed");
+      setError(toErrorMessage(uploadError, "Upload failed"));
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -110,22 +121,22 @@ export function EditSopPage() {
       if (isCreate) {
         await createProcedure({
           partNumber: part.trim(),
-          title,
-          body,
+          title: title.trim(),
+          body: body.trim(),
           photoIds: photos.map((photo) => photo.storageId),
         });
       } else {
         await editProcedure({
           procedureId: procedureId as Id<"procedures">,
-          title,
-          body,
+          title: title.trim(),
+          body: body.trim(),
           photoIds: photos.map((photo) => photo.storageId),
         });
       }
 
       navigate(`/parts/${encodeURIComponent(part.trim())}`);
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Save failed");
+      setError(toErrorMessage(saveError, "Save failed"));
     } finally {
       setIsSaving(false);
     }
@@ -137,30 +148,37 @@ export function EditSopPage() {
 
       <label>
         Part number
-        <input value={part} onChange={(e) => setPart(e.target.value)} disabled={!isCreate} />
+        <input value={part} onChange={(e) => setPart(e.target.value)} disabled={!isCreate || isSaving} />
       </label>
 
       <label>
         Title
-        <input value={title} onChange={(e) => setTitle(e.target.value)} />
+        <input value={title} onChange={(e) => setTitle(e.target.value)} disabled={isSaving} />
       </label>
 
       <label>
         SOP Text
-        <textarea rows={8} value={body} onChange={(e) => setBody(e.target.value)} />
+        <textarea rows={8} value={body} onChange={(e) => setBody(e.target.value)} disabled={isSaving} />
       </label>
 
       <label>
         Add photos
-        <input type="file" multiple accept="image/*" onChange={(e) => void onUpload(e.target.files)} />
+        <input
+          type="file"
+          multiple
+          accept="image/*"
+          disabled={isSaving || isUploading}
+          onChange={(e) => void onUpload(e.target.files)}
+        />
       </label>
 
+      {isUploading && <p className="muted">Uploading photos...</p>}
       <PhotoListEditor photos={photos} onChange={setPhotos} />
 
       {error && <p className="error">{error}</p>}
 
       <div className="inline-actions">
-        <button disabled={isSaving} onClick={() => void onSave()}>
+        <button disabled={isSaving || isUploading} onClick={() => void onSave()}>
           {isSaving ? "Saving..." : "Save"}
         </button>
         <Link to={part ? `/parts/${encodeURIComponent(part)}` : "/"}>Cancel</Link>

@@ -6,6 +6,17 @@ import { api } from "../../../../convex/_generated/api";
 
 export function HistoryPage() {
   const { procedureId = "" } = useParams();
+
+  if (!procedureId) {
+    return (
+      <div className="card">
+        <h1>Invalid procedure</h1>
+        <p className="muted">No procedure ID was provided.</p>
+        <Link to="/">Back to search</Link>
+      </div>
+    );
+  }
+
   const typedProcedureId = procedureId as Id<"procedures">;
 
   const versions = useQuery(api.procedures.listVersions, {
@@ -32,7 +43,7 @@ export function HistoryPage() {
           <ul className="result-list">
             {versions.map((version) => (
               <li key={version._id}>
-                <button onClick={() => setSelectedVersionId(version._id)}>
+                <button type="button" onClick={() => setSelectedVersionId(version._id)}>
                   Version {version.versionNumber} | {new Date(version.createdAt).toLocaleString()} | {version.createdBy}
                 </button>
               </li>
@@ -43,12 +54,30 @@ export function HistoryPage() {
       </div>
 
       {selectedVersion && (
-        <div className="card">
+        <div className="card stack">
           <h2>
             Version {selectedVersion.versionNumber} - {selectedVersion.title}
           </h2>
           <p className="preserve-lines">{selectedVersion.body}</p>
-          <p className="muted">Read-only historical version</p>
+          <p className="muted">
+            Edited by {selectedVersion.createdBy} at {new Date(selectedVersion.createdAt).toLocaleString()}
+          </p>
+
+          <h3>Photos</h3>
+          {!selectedVersion.photos.length && <p className="muted">No photos in this version</p>}
+          {!!selectedVersion.photos.length && (
+            <div className="gallery">
+              {selectedVersion.photos.map((photo) => (
+                <div key={photo.storageId} className="gallery-item">
+                  {photo.url ? <img src={photo.url} alt={`Version ${selectedVersion.versionNumber} photo`} /> : <span>Missing photo</span>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {selectedVersion.part?.partNumber && (
+            <Link to={`/parts/${encodeURIComponent(selectedVersion.part.partNumber)}`}>Back to current SOP</Link>
+          )}
         </div>
       )}
     </section>
