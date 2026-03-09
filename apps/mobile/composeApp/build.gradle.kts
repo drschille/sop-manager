@@ -8,7 +8,7 @@ plugins {
   alias(libs.plugins.composeMultiplatform)
   alias(libs.plugins.composeCompiler)
   alias(libs.plugins.serialization)
-  alias(libs.plugins.convex)
+//  alias(libs.plugins.convex)
 }
 
 kotlin {
@@ -51,19 +51,19 @@ kotlin {
 
 //tasks.named("generateConvexSources") { enabled = false }
 
-project.afterEvaluate {
-  tasks.named("check") {
-    setDependsOn(dependsOn.filterNot { it is Task && it.name == "generateConvexSources" })
-  }
-}
+//project.afterEvaluate {
+//  tasks.named("check") {
+//    setDependsOn(dependsOn.filterNot { it is Task && it.name == "generateConvexSources" })
+//  }
+//}
 
 dependencies { androidRuntimeClasspath(libs.compose.uiTooling) }
 
 kotlin { jvmToolchain(21) }
 
-convex {
-  remote {
-    url = "https://dynamic-fish-493.convex.cloud"
-    key = "dev:dynamic-fish-493|eyJ2MiI6IjI4NzhjNTA2MDE3NjRlMWRhM2E5YzI2ZTY0MjA0MDNiIn0="
-  }
-}
+//convex {
+//  remote {
+//    url = "https://dynamic-fish-493.convex.cloud"
+//    key = "dev:dynamic-fish-493|eyJ2MiI6IjI4NzhjNTA2MDE3NjRlMWRhM2E5YzI2ZTY0MjA0MDNiIn0="
+//  }
+//}

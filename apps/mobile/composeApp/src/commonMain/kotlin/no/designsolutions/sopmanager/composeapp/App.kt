@@ -20,7 +20,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
@@ -29,17 +28,18 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import no.designsolutions.sopmanager.composeapp.data.Convex
 import no.designsolutions.sopmanager.composeapp.model.PartSearchResult
 import no.designsolutions.sopmanager.composeapp.model.ProcedureDetail
 import no.designsolutions.sopmanager.composeapp.model.SopVersion
 import no.designsolutions.sopmanager.composeapp.qr.QrParser
 import no.designsolutions.sopmanager.composeapp.qr.provideQrScanner
-import no.designsolutions.sopmanager.composeapp.repository.ConvexSopRepository
+import no.designsolutions.sopmanager.composeapp.data.repository.ConvexSopRepository
 import no.designsolutions.sopmanager.composeapp.repository.PhotoPayload
 import no.designsolutions.sopmanager.composeapp.repository.SopRepository
 import no.designsolutions.sopmanager.composeapp.ui.theme.AppTheme
 
-private const val DefaultConvexUrl = "https://dynamic-fish-439.convex.cloud"
+
 
 private enum class Screen {
     SignIn,
@@ -55,8 +55,7 @@ private enum class Screen {
 fun App() {
     AppTheme(isSystemInDarkTheme()) {
         var screen by retain { mutableStateOf(Screen.SignIn) }
-        var convexUrl by retain { mutableStateOf(DefaultConvexUrl) }
-        val repository: SopRepository = retain(convexUrl) { ConvexSopRepository(convexUrl) }
+        val repository: SopRepository = retain { ConvexSopRepository(Convex.client) }
 
         var partNumber by retain { mutableStateOf("") }
         var currentDetail by retain { mutableStateOf<ProcedureDetail?>(null) }
