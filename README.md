@@ -54,6 +54,8 @@ Replace placeholders:
 
 Web MSAL setup is in [`apps/web/src/auth/msal.ts`](/Users/danielrobertschille/Developer/convex/sop-manager/apps/web/src/auth/msal.ts).
 
+To bypass MSAL during local UI development, set `VITE_MOCK_AUTH=true` in `apps/web/.env.local`. This only skips the frontend login gate; Convex still requires auth unless you adjust backend checks.
+
 ## What still needs real credentials / tenant config
 
 Before real login works, replace all placeholder values with your tenant values:
@@ -62,6 +64,15 @@ Before real login works, replace all placeholder values with your tenant values:
 - web env values for `VITE_ENTRA_TENANT_ID`, `VITE_ENTRA_CLIENT_ID`, `VITE_ENTRA_REDIRECT_URI`
 - backend env value `ENTRA_TENANT_ID` used by `requireTenant`
 - any Convex deployment URL and keys needed for your environment
+
+## Authless local testing
+
+For a completely authless variant during local testing, set the following:
+
+- Web: `VITE_MOCK_AUTH=true` in `apps/web/.env.local` to bypass MSAL.
+- Backend: `ALLOW_UNAUTHENTICATED=true` in your Convex env to bypass `requireUser`/`requireTenant`.
+
+This should only be used for local testing.
 
 ## Architecture summary
 

@@ -8,6 +8,16 @@ function getEnv(name: string): string | undefined {
 }
 
 export async function requireUser(ctx: Ctx) {
+  const allowUnauth = getEnv("ALLOW_UNAUTHENTICATED") === "true";
+  if (allowUnauth) {
+    return {
+      subject: "local-dev",
+      name: "Local Dev",
+      email: "local@example.com",
+      issuer: "local",
+    };
+  }
+
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
     throw new Error("Not authenticated");

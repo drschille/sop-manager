@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { convex } from "../lib/convex";
+import { convex, mockAuthEnabled } from "../lib/convex";
 import { getActiveAccount, getIdToken, initMsal, signIn, signOut } from "./msal";
 
 type AuthContextValue = {
@@ -37,13 +37,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     async function start() {
       try {
+        if (mockAuthEnabled) {
+          setProfileName("Mock User");
+          setProfileEmail("mock@example.com");
+          setIsAuthenticated(true);
+          setAuthError(null);
+          setInitialized(true);
+          return;
+        }
+
         await initMsal();
         const account = getActiveAccount();
 
         if (account) {
           setProfileName(account.name ?? null);
           setProfileEmail(account.username ?? null);
-          convex.setAuth(async () => {
+          convex?.setAuth(async () => {
             try {
               return await getIdToken();
             } catch (error) {
@@ -59,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           });
         } else {
-          convex.clearAuth();
+          convex?.clearAuth();
           setIsAuthenticated(false);
         }
       } catch (error) {
@@ -95,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await signIn();
       },
       signOut: async () => {
-        convex.clearAuth();
+        convex?.clearAuth();
         setAuthError(null);
         await signOut();
       },
