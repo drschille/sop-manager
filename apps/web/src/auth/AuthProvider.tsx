@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { convex, mockAuthEnabled } from "../lib/convex";
-import { getActiveAccount, getIdToken, initMsal, signIn, signOut } from "./msal";
+type MsalModule = typeof import("./msal");
 
 type AuthContextValue = {
   initialized: boolean;
@@ -46,15 +46,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        await initMsal();
-        const account = getActiveAccount();
+        const msalModule: MsalModule = await import("./msal");
+        await msalModule.initMsal();
+        const account = msalModule.getActiveAccount();
 
         if (account) {
           setProfileName(account.name ?? null);
           setProfileEmail(account.username ?? null);
           convex?.setAuth(async () => {
             try {
-              return await getIdToken();
+              return await msalModule.getIdToken();
             } catch (error) {
               setAuthError(error instanceof Error ? error.message : "Authentication failed");
               return null;
@@ -101,12 +102,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       backendUser,
       signIn: async () => {
         setAuthError(null);
-        await signIn();
+        const msalModule: MsalModule = await import("./msal");
+        await msalModule.signIn();
       },
       signOut: async () => {
         convex?.clearAuth();
         setAuthError(null);
-        await signOut();
+        const msalModule: MsalModule = await import("./msal");
+        await msalModule.signOut();
       },
     }),
     [initialized, isAuthenticated, authError, profileName, profileEmail, backendUser],
