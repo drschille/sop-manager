@@ -1,12 +1,37 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
-// The schema is entirely optional.
-// You can delete this file (schema.ts) and the
-// app will continue to work.
-// The schema provides more precise TypeScript types.
 export default defineSchema({
-  numbers: defineTable({
-    value: v.number(),
-  }),
+  parts: defineTable({
+    partNumber: v.string(),
+    qrValue: v.optional(v.string()),
+    createdAt: v.number(),
+  }).index("by_partNumber", ["partNumber"]),
+
+  procedures: defineTable({
+    partId: v.id("parts"),
+    currentVersionId: v.optional(v.id("procedureVersions")),
+    createdAt: v.number(),
+    createdBy: v.string(),
+  }).index("by_partId", ["partId"]),
+
+  procedureVersions: defineTable({
+    procedureId: v.id("procedures"),
+    title: v.string(),
+    body: v.string(),
+    photoStorageIds: v.array(v.id("_storage")),
+    versionNumber: v.number(),
+    createdAt: v.number(),
+    createdBy: v.string(),
+  })
+    .index("by_procedureId", ["procedureId"])
+    .index("by_procedureId_versionNumber", ["procedureId", "versionNumber"]),
+
+  auditLog: defineTable({
+    procedureId: v.id("procedures"),
+    versionId: v.id("procedureVersions"),
+    action: v.union(v.literal("created"), v.literal("edited")),
+    performedBy: v.string(),
+    performedAt: v.number(),
+  }).index("by_procedureId", ["procedureId"]),
 });

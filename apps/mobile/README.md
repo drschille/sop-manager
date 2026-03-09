@@ -40,11 +40,11 @@ in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and r
 
 ---
 
-# Mobile Time Tracking
+# Standard Procedure Manager
 
 ## App built with a Convex backend
 
-This is a simple time tracking app to record the time you spend on different tasks.
+This is a simple SOP app to record the best practices for different tasks and products.
 It’s built with a Convex backend, which provides real time data synchronization and a simple API
 for attaching the client to the backend.
 
@@ -52,13 +52,10 @@ The app is built with Kotlin Multiplatform, which allows you to share code betwe
 
 ## What the app does
 
-The app allows you to log on to a workstation where tasks are planned and ready to be started.
+The app allows you to scan QR codes of Part Numbers which either takes you to an exiting SOP or prompts users to make a new one if non exists. 
 
-For each workstation you can see which items are started, ready to be started or is incoming soon.
-The incoming tasks show if the route they are on is currently idle or in progress, and how many
-remaining workstations it must pass through before it can be started.
+Users then writes the SOP by taking photos, placing them in a sequence and optionally add descriptions to the photos.
 
-Starting a task is as easy as tapping on it.
 
 
 Learn more
