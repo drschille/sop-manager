@@ -12,7 +12,8 @@
     "dev:backend": "convex dev",
     "build": "npm --workspace apps/web run build",
     "lint": "npm --workspace apps/web run lint",
-    "convex:codegen": "convex codegen"
+    "convex:clean": "find convex -type f \\( -name '*.js' -o -name '*.js.map' \\) ! -path 'convex/_generated/*' -delete",
+    "convex:codegen": "npm run convex:clean && convex codegen"
   },
   "dependencies": {
     "convex": "^1.32.0"
