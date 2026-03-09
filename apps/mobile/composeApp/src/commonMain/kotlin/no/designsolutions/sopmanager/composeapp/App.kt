@@ -12,6 +12,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.retain.retain
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -27,6 +29,7 @@ import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import no.designsolutions.sopmanager.composeapp.data.Convex
 import no.designsolutions.sopmanager.composeapp.data.repository.ConvexSopRepository
+import no.designsolutions.sopmanager.composeapp.logging.AppLogger
 import no.designsolutions.sopmanager.composeapp.qr.QrParser
 import no.designsolutions.sopmanager.composeapp.qr.provideQrScanner
 import no.designsolutions.sopmanager.composeapp.repository.SopRepository
@@ -51,6 +54,7 @@ private sealed interface AppRoute : NavKey {
 }
 
 @Composable
+@OptIn(ExperimentalComposeUiApi::class)
 fun App() {
     AppTheme(isSystemInDarkTheme()) {
         val backStackConfiguration = SavedStateConfiguration {
@@ -70,20 +74,27 @@ fun App() {
         val repository: SopRepository = retain { ConvexSopRepository(Convex.client) }
         val qrScanner = retain { provideQrScanner() }
         val vm = viewModel { AppViewModel(repository) }
+        LaunchedEffect(Unit) {
+            AppLogger.init()
+            AppLogger.i("App composed")
+        }
 
         fun navigateTo(route: AppRoute) {
             backStack.add(route)
+            AppLogger.d("Navigate -> $route (stack=${backStack.size})")
         }
 
         fun goBack() {
             if (backStack.size > 1) {
-                backStack.removeLastOrNull()
+                val popped = backStack.removeLastOrNull()
+                AppLogger.d("Back <- $popped (stack=${backStack.size})")
             }
         }
 
         fun resetTo(route: AppRoute) {
             backStack.clear()
             backStack.add(route)
+            AppLogger.i("Navigation reset -> $route")
         }
 
         val activeEntries = rememberDecoratedNavEntries(
@@ -97,16 +108,22 @@ fun App() {
                 entry(AppRoute.Home) {
                     HomeScreen(
                         onScanQr = {
+                            AppLogger.d("QR scan requested")
                             qrScanner.scan(
                                 onSuccess = { payload ->
                                     val parsed = QrParser.extractPartNumber(payload)
                                     if (parsed == null) {
+                                        AppLogger.w("QR payload did not contain valid part number")
                                         vm.updateStatusMessage("Invalid QR code")
                                     } else {
+                                        AppLogger.i("QR parsed part number: $parsed")
                                         vm.loadProcedureByPart(parsed) { navigateTo(AppRoute.SopDetail) }
                                     }
                                 },
-                                onError = { err -> vm.updateStatusMessage(err) },
+                                onError = { err ->
+                                    AppLogger.e("QR scan failed: $err")
+                                    vm.updateStatusMessage(err)
+                                },
                             )
                         },
                         onSearch = { navigateTo(AppRoute.Search) },
@@ -179,6 +196,11 @@ fun App() {
                 }
             },
         )
+
+        BackHandler(enabled = backStack.size > 1) {
+            AppLogger.d("System back pressed")
+            goBack()
+        }
 
         Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
             Column(
