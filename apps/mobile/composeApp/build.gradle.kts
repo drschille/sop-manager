@@ -7,12 +7,11 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.serialization)
-    alias(libs.plugins.convex)
 }
 
 kotlin {
     androidLibrary {
-        namespace = "no.designsolutions.timetracker.composeapp"
+        namespace = "no.designsolutions.sopmanager.composeapp"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
         minSdk = libs.versions.android.minSdk.get().toInt()
 
@@ -40,29 +39,13 @@ kotlin {
         implementation(libs.androidx.lifecycle.runtimeCompose)
 
         implementation(libs.kotlinx.datetime)
-
-        testImplementation(libs.kotlin.test)
-
         implementation(libs.kotlinx.serialization.json)
         implementation(libs.kotlinx.serialization.core)
-        implementation(libs.convex.core)
-        implementation(libs.haze)
+
+        testImplementation(libs.kotlin.test)
     }
 }
 
 dependencies { androidRuntimeClasspath(libs.compose.uiTooling) }
 
-kotlin {
-    jvmToolchain(21)
-}
-
-tasks.named("generateConvexSources") {
-    enabled = false
-}
-
-convex {
-    remote {
-        url = "https://combative-mule-878.convex.cloud"
-        key = "dev:combative-mule-878|eyJ2MiI6IjQzYjU0NmNhMzdlNTQ5MDBiODEzNmU0OGYxZGY1M2M4In0="
-    }
-}
+kotlin { jvmToolchain(21) }

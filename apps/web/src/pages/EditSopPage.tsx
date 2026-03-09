@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import type { Id } from "../../../../convex/_generated/dataModel";
@@ -34,7 +34,7 @@ export function EditSopPage() {
     procedureId ? { procedureId: procedureId as Id<"procedures"> } : "skip",
   );
 
-  const defaultPhotos: PhotoItem[] = useMemo(() => {
+  const existingPhotos: PhotoItem[] = useMemo(() => {
     if (!procedure?.currentVersion) {
       return [];
     }
@@ -54,16 +54,18 @@ export function EditSopPage() {
   const createProcedure = useMutation(api.procedures.create);
   const editProcedure = useMutation(api.procedures.edit);
   const generateUploadUrl = useMutation(api.photos.generateUploadUrl);
-  const getPhotoUrl = useQuery;
+
+  useEffect(() => {
+    if (!isCreate && procedure) {
+      setPart(procedure.part?.partNumber ?? "");
+      setTitle(procedure.currentVersion?.title ?? "");
+      setBody(procedure.currentVersion?.body ?? "");
+      setPhotos(existingPhotos);
+    }
+  }, [isCreate, procedure, existingPhotos]);
 
   if (!isCreate && !procedure) {
     return <p>Loading...</p>;
-  }
-
-  if (!isCreate && procedure && title === "" && body === "" && photos.length === 0) {
-    setTitle(procedure.currentVersion?.title ?? "");
-    setBody(procedure.currentVersion?.body ?? "");
-    setPhotos(defaultPhotos);
   }
 
   const onUpload = async (files: FileList | null) => {
@@ -78,8 +80,11 @@ export function EditSopPage() {
       for (const file of Array.from(files)) {
         const upload = await generateUploadUrl({});
         const storageId = await uploadToConvex(upload.uploadUrl, file);
-        const photo = await getPhotoUrl(api.photos.getPhotoUrl, { storageId });
-        next.push({ storageId, url: photo?.url ?? null, name: file.name });
+        next.push({
+          storageId,
+          url: URL.createObjectURL(file),
+          name: file.name,
+        });
       }
       setPhotos((prev) => [...prev, ...next]);
     } catch (uploadError) {
@@ -90,6 +95,11 @@ export function EditSopPage() {
   const onSave = async () => {
     if (!part.trim()) {
       setError("Part number is required");
+      return;
+    }
+
+    if (!title.trim()) {
+      setError("Title is required");
       return;
     }
 

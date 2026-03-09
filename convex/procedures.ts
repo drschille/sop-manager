@@ -3,7 +3,7 @@ import { mutation, query } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { requireTenant, userLabel } from "./lib/auth";
 
-async function resolvePhotoUrls(ctx: Parameters<typeof query>[0]["handler"] extends never ? never : any, storageIds: Id<"_storage">[]) {
+async function resolvePhotoUrls(ctx: { storage: { getUrl: (id: Id<"_storage">) => Promise<string | null> } }, storageIds: Id<"_storage">[]) {
   const urls = await Promise.all(storageIds.map((id) => ctx.storage.getUrl(id)));
   return storageIds.map((id, index) => ({
     storageId: id,
@@ -20,7 +20,7 @@ export const getByPartNumber = query({
 
     const part = await ctx.db
       .query("parts")
-      .withIndex("by_partNumber", (q) => q.eq("partNumber", args.partNumber))
+      .withIndex("by_partNumber", (q) => q.eq("partNumber", args.partNumber.trim()))
       .unique();
 
     if (!part) {
@@ -60,6 +60,36 @@ export const getByPartNumber = query({
         ...currentVersion,
         photos: await resolvePhotoUrls(ctx, currentVersion.photoStorageIds),
       },
+    };
+  },
+});
+
+export const getById = query({
+  args: {
+    procedureId: v.id("procedures"),
+  },
+  handler: async (ctx, args) => {
+    await requireTenant(ctx);
+
+    const procedure = await ctx.db.get(args.procedureId);
+    if (!procedure) {
+      return null;
+    }
+
+    const part = await ctx.db.get(procedure.partId);
+    const currentVersion = procedure.currentVersionId
+      ? await ctx.db.get(procedure.currentVersionId)
+      : null;
+
+    return {
+      procedure,
+      part,
+      currentVersion: currentVersion
+        ? {
+            ...currentVersion,
+            photos: await resolvePhotoUrls(ctx, currentVersion.photoStorageIds),
+          }
+        : null,
     };
   },
 });
