@@ -124,7 +124,70 @@ button:hover {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 8px;
+  gap: 12px;
+}
+
+.search-result-card {
+  border: 1px solid #d7e0ee;
+  border-radius: 12px;
+  background: #fbfdff;
+  overflow: hidden;
+}
+
+.search-result-link {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+  color: inherit;
+}
+
+.search-result-link:hover {
+  text-decoration: none;
+  background: #f2f7ff;
+}
+
+.search-thumb-wrap {
+  width: 72px;
+  height: 72px;
+}
+
+.search-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #d7e0ee;
+}
+
+.search-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  border: 1px dashed #c9d6eb;
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  color: #64748b;
+  background: #f7faff;
+}
+
+.search-result-text {
+  display: grid;
+  gap: 4px;
+}
+
+.search-result-text h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.02rem;
+}
+
+.search-result-text p {
+  margin: 0;
+  color: #42526b;
+  font-size: 0.92rem;
 }
 
 .inline-actions {
@@ -315,6 +378,15 @@ label {
 
   .photo-item {
     grid-template-columns: 1fr;
+  }
+
+  .search-result-link {
+    grid-template-columns: 1fr;
+  }
+
+  .search-thumb-wrap {
+    width: 100%;
+    height: 160px;
   }
 
   .drag-handle-left {
