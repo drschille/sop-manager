@@ -18,6 +18,7 @@ kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.7.1"
 serialization = "1.8.1"
 convex = "0.0.3"
+navigation3 = "1.0.1"
 
 [libraries]
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
@@ -46,6 +47,8 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
 kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "serialization" }
 convex-core = { group = "com.kansson.kmp", name = "kmp-convex-core", version.ref = "convex" }
+androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
+androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
 
 [plugins]
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

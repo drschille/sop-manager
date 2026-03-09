@@ -21,7 +21,7 @@ object SopApi {
         override val identifier: String = "procedures:getByPartNumber",
         override val args: ByPartArgs,
     ) : ConvexFunction.Query<ByPartArgs, ProcedureByPartResponse> {
-        constructor(partNumber: String) : this(args = ByPartArgs(partNumber))
+      constructor(partNumber: String) : this(args = ByPartArgs(partNumber))
     }
 
     data class ListVersions(
@@ -176,20 +176,20 @@ data class CurrentUserResponse(
 )
 
 fun VersionResponse.toSopVersion(): SopVersion {
-    return SopVersion(
-        id = id,
-        versionNumber = versionNumber,
-        title = title,
-        body = body,
-        photos =
-            photos.map {
-                PhotoRef(
-                    storageId = it.storageId,
-                    previewUrl = it.url,
-                    description = it.description,
-                )
-            },
-        createdAt = createdAt.toString(),
-        createdBy = createdBy,
-    )
+  return SopVersion(
+      id = id,
+      versionNumber = versionNumber,
+      title = title,
+      body = body,
+      photos =
+          photos.map {
+            PhotoRef(
+                storageId = it.storageId,
+                previewUrl = it.url,
+                description = it.description,
+            )
+          },
+      createdAt = createdAt.toString(),
+      createdBy = createdBy,
+  )
 }
