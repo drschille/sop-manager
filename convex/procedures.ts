@@ -3,11 +3,16 @@ import { mutation, query } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { requireTenant, userLabel } from "./lib/auth";
 
-async function resolvePhotoUrls(ctx: { storage: { getUrl: (id: Id<"_storage">) => Promise<string | null> } }, storageIds: Id<"_storage">[]) {
+async function resolvePhotoUrls(
+  ctx: { storage: { getUrl: (id: Id<"_storage">) => Promise<string | null> } },
+  storageIds: Id<"_storage">[],
+  descriptions?: string[],
+) {
   const urls = await Promise.all(storageIds.map((id) => ctx.storage.getUrl(id)));
   return storageIds.map((id, index) => ({
     storageId: id,
     url: urls[index],
+    description: descriptions?.[index]?.trim() || undefined,
   }));
 }
 
@@ -58,7 +63,11 @@ export const getByPartNumber = query({
       procedure,
       currentVersion: {
         ...currentVersion,
-        photos: await resolvePhotoUrls(ctx, currentVersion.photoStorageIds),
+        photos: await resolvePhotoUrls(
+          ctx,
+          currentVersion.photoStorageIds,
+          currentVersion.photoDescriptions,
+        ),
       },
     };
   },
@@ -87,7 +96,11 @@ export const getById = query({
       currentVersion: currentVersion
         ? {
             ...currentVersion,
-            photos: await resolvePhotoUrls(ctx, currentVersion.photoStorageIds),
+            photos: await resolvePhotoUrls(
+              ctx,
+              currentVersion.photoStorageIds,
+              currentVersion.photoDescriptions,
+            ),
           }
         : null,
     };
@@ -99,7 +112,10 @@ export const create = mutation({
     partNumber: v.string(),
     title: v.string(),
     body: v.string(),
-    photoIds: v.array(v.id("_storage")),
+    photos: v.array(v.object({
+      storageId: v.id("_storage"),
+      description: v.optional(v.string()),
+    })),
   },
   handler: async (ctx, args) => {
     const identity = await requireTenant(ctx);
@@ -147,7 +163,8 @@ export const create = mutation({
       procedureId,
       title: args.title,
       body: args.body,
-      photoStorageIds: args.photoIds,
+      photoStorageIds: args.photos.map((photo) => photo.storageId),
+      photoDescriptions: args.photos.map((photo) => photo.description?.trim() || ""),
       versionNumber: 1,
       createdAt: Date.now(),
       createdBy: actor,
@@ -174,7 +191,10 @@ export const edit = mutation({
     procedureId: v.id("procedures"),
     title: v.string(),
     body: v.string(),
-    photoIds: v.array(v.id("_storage")),
+    photos: v.array(v.object({
+      storageId: v.id("_storage"),
+      description: v.optional(v.string()),
+    })),
   },
   handler: async (ctx, args) => {
     const identity = await requireTenant(ctx);
@@ -197,7 +217,8 @@ export const edit = mutation({
       procedureId: args.procedureId,
       title: args.title,
       body: args.body,
-      photoStorageIds: args.photoIds,
+      photoStorageIds: args.photos.map((photo) => photo.storageId),
+      photoDescriptions: args.photos.map((photo) => photo.description?.trim() || ""),
       versionNumber: nextVersionNumber,
       createdAt: Date.now(),
       createdBy: actor,
@@ -261,7 +282,7 @@ export const getVersion = query({
       ...version,
       procedure,
       part,
-      photos: await resolvePhotoUrls(ctx, version.photoStorageIds),
+      photos: await resolvePhotoUrls(ctx, version.photoStorageIds, version.photoDescriptions),
     };
   },
 });

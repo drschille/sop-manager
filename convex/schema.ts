@@ -20,6 +20,7 @@ export default defineSchema({
     title: v.string(),
     body: v.string(),
     photoStorageIds: v.array(v.id("_storage")),
+    photoDescriptions: v.optional(v.array(v.string())),
     versionNumber: v.number(),
     createdAt: v.number(),
     createdBy: v.string(),

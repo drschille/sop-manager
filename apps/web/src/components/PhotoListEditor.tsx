@@ -4,6 +4,7 @@ export type PhotoItem = {
   storageId: Id<"_storage">;
   url?: string | null;
   name?: string;
+  description?: string;
 };
 
 export function PhotoListEditor({
@@ -41,7 +42,22 @@ export function PhotoListEditor({
             {photo.url ? <img src={photo.url} alt={photo.name ?? "SOP photo"} /> : <span>No preview</span>}
           </div>
           <div className="photo-actions">
-            <span>{photo.name ?? photo.storageId}</span>
+            <span className="photo-name">{photo.name ?? photo.storageId}</span>
+            <label className="photo-description-label">
+              Image description (optional)
+              <input
+                value={photo.description ?? ""}
+                placeholder="Describe what this image shows"
+                onChange={(event) => {
+                  const clone = [...photos];
+                  clone[index] = {
+                    ...clone[index],
+                    description: event.target.value,
+                  };
+                  onChange(clone);
+                }}
+              />
+            </label>
             <div>
               <button type="button" onClick={() => move(index, index - 1)}>
                 Up

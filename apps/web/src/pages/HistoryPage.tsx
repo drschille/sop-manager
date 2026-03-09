@@ -67,9 +67,17 @@ export function HistoryPage() {
           {!selectedVersion.photos.length && <p className="muted">No photos in this version</p>}
           {!!selectedVersion.photos.length && (
             <div className="gallery">
-              {selectedVersion.photos.map((photo: { storageId: string; url: string | null }) => (
+              {selectedVersion.photos.map((photo: { storageId: string; url: string | null; description?: string }) => (
                 <div key={photo.storageId} className="gallery-item">
-                  {photo.url ? <img src={photo.url} alt={`Version ${selectedVersion.versionNumber} photo`} /> : <span>Missing photo</span>}
+                  {photo.url ? (
+                    <img
+                      src={photo.url}
+                      alt={photo.description?.trim() || `Version ${selectedVersion.versionNumber} photo`}
+                    />
+                  ) : (
+                    <span>Missing photo</span>
+                  )}
+                  {photo.description?.trim() && <p className="photo-caption">{photo.description}</p>}
                 </div>
               ))}
             </div>

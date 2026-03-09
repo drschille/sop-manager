@@ -23,9 +23,10 @@ export function EditSopPage() {
     if (!procedure?.currentVersion) {
       return [];
     }
-    return procedure.currentVersion.photos.map((photo: { storageId: string; url: string | null }) => ({
+    return procedure.currentVersion.photos.map((photo: { storageId: Id<"_storage">; url: string | null; description?: string }) => ({
       storageId: photo.storageId,
       url: photo.url,
+      description: photo.description,
     }));
   }, [procedure]);
 
@@ -123,14 +124,20 @@ export function EditSopPage() {
           partNumber: part.trim(),
           title: title.trim(),
           body: body.trim(),
-          photoIds: photos.map((photo) => photo.storageId),
+          photos: photos.map((photo) => ({
+            storageId: photo.storageId,
+            description: photo.description?.trim() || undefined,
+          })),
         });
       } else {
         await editProcedure({
           procedureId: procedureId as Id<"procedures">,
           title: title.trim(),
           body: body.trim(),
-          photoIds: photos.map((photo) => photo.storageId),
+          photos: photos.map((photo) => ({
+            storageId: photo.storageId,
+            description: photo.description?.trim() || undefined,
+          })),
         });
       }
 
