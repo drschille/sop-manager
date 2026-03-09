@@ -38,6 +38,7 @@ kotlin {
     implementation(libs.compose.ui.backhandler)
     implementation(libs.compose.components.resources)
     implementation(libs.compose.uiToolingPreview)
+    implementation(libs.kamel.image)
     implementation(libs.androidx.lifecycle.viewmodelCompose)
     implementation(libs.androidx.lifecycle.runtimeCompose)
 
@@ -48,6 +49,15 @@ kotlin {
     implementation(libs.androidx.navigation3.runtime)
 
     testImplementation(libs.kotlin.test)
+  }
+
+  sourceSets {
+    androidMain.dependencies {
+      implementation(libs.ktor.client.okhttp)
+    }
+    iosMain.dependencies {
+      implementation(libs.ktor.client.darwin)
+    }
   }
 }
 

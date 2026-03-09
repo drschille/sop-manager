@@ -19,6 +19,8 @@ kotlinx-datetime = "0.7.1"
 serialization = "1.8.1"
 convex = "0.0.3"
 navigation3 = "1.0.1"
+kamel = "1.0.8"
+ktor = "3.3.0"
 
 [libraries]
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
@@ -50,6 +52,9 @@ kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 convex-core = { group = "com.kansson.kmp", name = "kmp-convex-core", version.ref = "convex" }
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
+kamel-image = { module = "media.kamel:kamel-image", version.ref = "kamel" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 
 [plugins]
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
