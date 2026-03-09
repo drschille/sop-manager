@@ -25,7 +25,7 @@ export function SearchPage() {
         {results && results.length === 0 && <p>No matching parts</p>}
         {results && results.length > 0 && (
           <ul className="result-list">
-            {results.map((part) => (
+            {results.map((part: { _id: string; partNumber: string }) => (
               <li key={part._id}>
                 <Link to={`/parts/${encodeURIComponent(part.partNumber)}`}>{part.partNumber}</Link>
               </li>

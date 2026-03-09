@@ -64,7 +64,7 @@ export function SopDetailPage() {
         {!data.currentVersion.photos.length && <p className="muted">No photos</p>}
         {!!data.currentVersion.photos.length && (
           <div className="gallery">
-            {data.currentVersion.photos.map((photo) => (
+            {data.currentVersion.photos.map((photo: { storageId: string; url: string | null }) => (
               <div key={photo.storageId} className="gallery-item">
                 {photo.url ? <img src={photo.url} alt={`${data.currentVersion.title} photo`} /> : <span>Missing photo</span>}
               </div>

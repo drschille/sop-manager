@@ -23,7 +23,7 @@ export function EditSopPage() {
     if (!procedure?.currentVersion) {
       return [];
     }
-    return procedure.currentVersion.photos.map((photo) => ({
+    return procedure.currentVersion.photos.map((photo: { storageId: string; url: string | null }) => ({
       storageId: photo.storageId,
       url: photo.url,
     }));

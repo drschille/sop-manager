@@ -41,7 +41,7 @@ export function HistoryPage() {
         {!versions.length && <p>No versions found.</p>}
         {!!versions.length && (
           <ul className="result-list">
-            {versions.map((version) => (
+            {versions.map((version: { _id: Id<"procedureVersions">; versionNumber: number; createdAt: number; createdBy: string }) => (
               <li key={version._id}>
                 <button type="button" onClick={() => setSelectedVersionId(version._id)}>
                   Version {version.versionNumber} | {new Date(version.createdAt).toLocaleString()} | {version.createdBy}
@@ -67,7 +67,7 @@ export function HistoryPage() {
           {!selectedVersion.photos.length && <p className="muted">No photos in this version</p>}
           {!!selectedVersion.photos.length && (
             <div className="gallery">
-              {selectedVersion.photos.map((photo) => (
+              {selectedVersion.photos.map((photo: { storageId: string; url: string | null }) => (
                 <div key={photo.storageId} className="gallery-item">
                   {photo.url ? <img src={photo.url} alt={`Version ${selectedVersion.versionNumber} photo`} /> : <span>Missing photo</span>}
                 </div>
