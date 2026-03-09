@@ -22,6 +22,7 @@ ENV VITE_ENTRA_CLIENT_ID=${VITE_ENTRA_CLIENT_ID}
 ENV VITE_ENTRA_REDIRECT_URI=${VITE_ENTRA_REDIRECT_URI}
 ENV VITE_MOCK_AUTH=${VITE_MOCK_AUTH}
 
+RUN npx convex dev --local --run "echo 'Generating Convex files...'"
 RUN npm --workspace apps/web run build
 
 FROM nginx:1.27-alpine
