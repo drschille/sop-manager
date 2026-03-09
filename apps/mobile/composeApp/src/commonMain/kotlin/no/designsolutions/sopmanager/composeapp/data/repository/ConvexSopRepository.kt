@@ -1,17 +1,15 @@
 package no.designsolutions.sopmanager.composeapp.data.repository
 
 import com.kansson.kmp.convex.core.ConvexClient
-import com.kansson.kmp.convex.core.ConvexFunction
 import com.kansson.kmp.convex.core.ConvexResponse
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import no.designsolutions.sopmanager.composeapp.data.Convex
+import no.designsolutions.sopmanager.composeapp.data.api.SavePhoto
 import no.designsolutions.sopmanager.composeapp.data.api.SopApi
+import no.designsolutions.sopmanager.composeapp.data.api.toSopVersion
 import no.designsolutions.sopmanager.composeapp.model.PartSearchResult
-import no.designsolutions.sopmanager.composeapp.model.PhotoRef
 import no.designsolutions.sopmanager.composeapp.model.ProcedureDetail
 import no.designsolutions.sopmanager.composeapp.model.SopVersion
 import no.designsolutions.sopmanager.composeapp.repository.PhotoPayload
@@ -33,12 +31,7 @@ class ConvexSopRepository(
   }
 
   override fun observeSearchParts(query: String): Flow<List<PartSearchResult>> {
-    val function =
-        object : ConvexFunction.Query<SearchArgs, List<SearchItemResponse>> {
-          override val identifier = "parts:search"
-          override val args = SearchArgs(query)
-        }
-    return client.query(function).mapSuccess { results ->
+    return client.query(SopApi.Parts.Search(query = query)).mapSuccess { results ->
       results.map {
         PartSearchResult(
             partNumber = it.partNumber,
@@ -50,12 +43,7 @@ class ConvexSopRepository(
   }
 
   override fun observeVersions(procedureId: String): Flow<List<SopVersion>> {
-    val function =
-        object : ConvexFunction.Query<ProcedureIdArgs, List<VersionListItemResponse>> {
-          override val identifier = "procedures:listVersions"
-          override val args = ProcedureIdArgs(procedureId)
-        }
-    return client.query(function).mapSuccess { versions ->
+    return client.query(SopApi.Procedures.ListVersions(procedureId = procedureId)).mapSuccess { versions ->
       versions.map {
         SopVersion(
             id = it.id,
@@ -71,21 +59,11 @@ class ConvexSopRepository(
   }
 
   override fun observeVersion(versionId: String): Flow<SopVersion?> {
-    val function =
-        object : ConvexFunction.Query<VersionIdArgs, VersionResponse?> {
-          override val identifier = "procedures:getVersion"
-          override val args = VersionIdArgs(versionId)
-        }
-    return client.query(function).mapSuccess { it?.toSopVersion() }
+    return client.query(SopApi.Procedures.GetVersion(versionId = versionId)).mapSuccess { it?.toSopVersion() }
   }
 
   override fun observeCurrentUserEmail(): Flow<String?> {
-    val function =
-        object : ConvexFunction.Query<EmptyArgs, CurrentUserResponse> {
-          override val identifier = "auth:getCurrentUser"
-          override val args = EmptyArgs()
-        }
-    return client.query(function).mapSuccess { it.email ?: it.name }
+    return client.query(SopApi.Auth.GetCurrentUser()).mapSuccess { it.email ?: it.name }
   }
 
   override suspend fun getByPartNumber(partNumber: String): ProcedureDetail? {
@@ -110,18 +88,15 @@ class ConvexSopRepository(
       body: String,
       photos: List<PhotoPayload>,
   ) {
-    val function =
-        object : ConvexFunction.Mutation<CreateArgs, MutationResult> {
-          override val identifier = "procedures:create"
-          override val args =
-              CreateArgs(
-                  partNumber = partNumber,
-                  title = title,
-                  body = body,
-                  photos = photos.map { SavePhoto(it.storageId, it.description) },
-              )
-        }
-    client.mutation(function).requireSuccess()
+    client.mutation(
+            SopApi.Procedures.Create(
+                partNumber = partNumber,
+                title = title,
+                body = body,
+                photos = photos.map { SavePhoto(it.storageId, it.description) },
+            ),
+        )
+        .requireSuccess()
   }
 
   override suspend fun saveEdit(
@@ -130,18 +105,15 @@ class ConvexSopRepository(
       body: String,
       photos: List<PhotoPayload>,
   ) {
-    val function =
-        object : ConvexFunction.Mutation<EditArgs, MutationResult> {
-          override val identifier = "procedures:edit"
-          override val args =
-              EditArgs(
-                  procedureId = procedureId,
-                  title = title,
-                  body = body,
-                  photos = photos.map { SavePhoto(it.storageId, it.description) },
-              )
-        }
-    client.mutation(function).requireSuccess()
+    client.mutation(
+            SopApi.Procedures.Edit(
+                procedureId = procedureId,
+                title = title,
+                body = body,
+                photos = photos.map { SavePhoto(it.storageId, it.description) },
+            ),
+        )
+        .requireSuccess()
   }
 
   override suspend fun currentUserEmail(): String? {
@@ -164,100 +136,3 @@ fun ConvexResponse<*>.requireSuccess() {
   }
 }
 
-@Serializable data class EmptyArgs(val placeholder: String? = null)
-
-@Serializable data class SearchArgs(val partNumberQuery: String)
-
-@Serializable data class ProcedureIdArgs(val procedureId: String)
-
-@Serializable data class VersionIdArgs(val versionId: String)
-
-@Serializable
-data class CreateArgs(
-    val partNumber: String,
-    val title: String,
-    val body: String,
-    val photos: List<SavePhoto>,
-)
-
-@Serializable
-data class EditArgs(
-    val procedureId: String,
-    val title: String,
-    val body: String,
-    val photos: List<SavePhoto>,
-)
-
-@Serializable
-data class MutationResult(
-    @SerialName("versionId") val versionId: String? = null,
-)
-
-@Serializable
-data class SavePhoto(
-    val storageId: String,
-    val description: String? = null,
-)
-
-@Serializable
-data class SearchItemResponse(
-    val partNumber: String,
-    val sopTitle: String? = null,
-    val thumbnailUrl: String? = null,
-)
-
-@Serializable data class PartResponse(val partNumber: String)
-
-@Serializable data class ProcedureResponse(@SerialName("_id") val id: String)
-
-@Serializable
-data class VersionListItemResponse(
-    @SerialName("_id") val id: String,
-    val versionNumber: Int,
-    val createdAt: Long,
-    val createdBy: String,
-    val title: String,
-)
-
-@Serializable
-data class VersionResponse(
-    @SerialName("_id") val id: String,
-    val versionNumber: Int,
-    val title: String,
-    val body: String,
-    val createdAt: Long,
-    val createdBy: String,
-    val photos: List<PhotoResponse> = emptyList(),
-)
-
-@Serializable
-data class PhotoResponse(
-    val storageId: String,
-    val url: String? = null,
-    val description: String? = null,
-)
-
-@Serializable
-data class CurrentUserResponse(
-    val email: String? = null,
-    val name: String? = null,
-)
-
-fun VersionResponse.toSopVersion(): SopVersion {
-  return SopVersion(
-      id = id,
-      versionNumber = versionNumber,
-      title = title,
-      body = body,
-      photos =
-          photos.map {
-            PhotoRef(
-                storageId = it.storageId,
-                previewUrl = it.url,
-                description = it.description,
-            )
-          },
-      createdAt = createdAt.toString(),
-      createdBy = createdBy,
-  )
-}
