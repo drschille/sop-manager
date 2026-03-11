@@ -32,7 +32,7 @@ class AppViewModel(
 
     val versionList = mutableStateListOf<SopVersion>()
     val searchResults = mutableStateListOf<PartSearchResult>()
-    val editPhotoDescriptions = mutableStateListOf<String>()
+    val editSteps = mutableStateListOf<StepDraft>()
 
     var signedInUser by mutableStateOf("mock-user@local")
         private set
@@ -64,10 +64,40 @@ class AppViewModel(
         sopBody = value
     }
 
-    fun updatePhotoDescription(index: Int, value: String) {
-        if (index in editPhotoDescriptions.indices) {
-            editPhotoDescriptions[index] = value
+    fun addStep() {
+        editSteps.add(StepDraft())
+    }
+
+    fun removeStep(index: Int) {
+        if (index in editSteps.indices) {
+            editSteps.removeAt(index)
         }
+    }
+
+    fun moveStep(fromIndex: Int, toIndex: Int) {
+        if (fromIndex !in editSteps.indices || toIndex !in editSteps.indices || fromIndex == toIndex) return
+        val step = editSteps.removeAt(fromIndex)
+        editSteps.add(toIndex, step)
+    }
+
+    fun updateStepDescription(index: Int, value: String) {
+        if (index in editSteps.indices) {
+            editSteps[index] = editSteps[index].copy(description = value)
+        }
+    }
+
+    fun addStepMedia(index: Int, media: StepMedia) {
+        if (index !in editSteps.indices) return
+        val updated = editSteps[index].media + media
+        editSteps[index] = editSteps[index].copy(media = updated)
+    }
+
+    fun removeStepMedia(stepIndex: Int, mediaIndex: Int) {
+        if (stepIndex !in editSteps.indices) return
+        val current = editSteps[stepIndex]
+        if (mediaIndex !in current.media.indices) return
+        val updated = current.media.toMutableList().apply { removeAt(mediaIndex) }
+        editSteps[stepIndex] = current.copy(media = updated)
     }
 
     fun signInMock(onSignedIn: () -> Unit) {
@@ -144,7 +174,8 @@ class AppViewModel(
         AppLogger.d("Preparing create SOP state for part: $partNumber")
         sopTitle = ""
         sopBody = ""
-        editPhotoDescriptions.clear()
+        editSteps.clear()
+        editSteps.add(StepDraft())
     }
 
     fun prepareEditSopFromLatest() {
@@ -152,8 +183,12 @@ class AppViewModel(
         AppLogger.d("Preparing edit state from latest SOP version: ${latest.versionNumber}")
         sopTitle = latest.title
         sopBody = latest.body
-        editPhotoDescriptions.clear()
-        editPhotoDescriptions.addAll(latest.photos.map { it.description.orEmpty() })
+        editSteps.clear()
+        if (latest.photos.isEmpty()) {
+            editSteps.add(StepDraft(description = latest.body))
+        } else {
+            editSteps.addAll(latest.photos.map { StepDraft(description = it.description.orEmpty()) })
+        }
     }
 
     fun saveSop(onSaved: () -> Unit) {
@@ -162,14 +197,14 @@ class AppViewModel(
             loading = true
             statusMessage = null
             try {
-                val photos = editPhotoDescriptions
-                    .filter { it.isNotBlank() }
-                    .map { PhotoPayload(storageId = "", description = it) }
+                val photos = editSteps
+                    .flatMap { it.media }
                     .filter { it.storageId.isNotBlank() }
+                    .map { PhotoPayload(storageId = it.storageId, description = it.label) }
 
                 val procedureId = currentDetail?.procedureId
                 if (procedureId.isNullOrBlank()) {
-                    repository.saveNew(partNumber, sopTitle, sopBody, emptyList())
+                    repository.saveNew(partNumber, sopTitle, sopBody, photos)
                     AppLogger.i("Created new SOP for part: $partNumber")
                 } else {
                     repository.saveEdit(procedureId, sopTitle, sopBody, photos)
@@ -256,3 +291,18 @@ class AppViewModel(
         super.onCleared()
     }
 }
+
+
+data class StepDraft(
+    val description: String = "",
+    val media: List<StepMedia> = emptyList(),
+)
+
+enum class StepMediaType { Image, Video }
+
+data class StepMedia(
+    val uri: String,
+    val type: StepMediaType,
+    val label: String? = null,
+    val storageId: String = "",
+)

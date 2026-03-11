@@ -180,10 +180,15 @@ fun App() {
                     EditSopScreen(
                         title = vm.sopTitle,
                         body = vm.sopBody,
-                        photoDescriptions = vm.editPhotoDescriptions,
+                        steps = vm.editSteps,
                         onTitleChange = vm::updateSopTitle,
                         onBodyChange = vm::updateSopBody,
-                        onPhotoDescriptionChange = vm::updatePhotoDescription,
+                        onStepDescriptionChange = vm::updateStepDescription,
+                        onAddStep = vm::addStep,
+                        onRemoveStep = vm::removeStep,
+                        onMoveStep = vm::moveStep,
+                        onAttachMedia = { vm.updateStatusMessage("Media picker integration pending on this build.") },
+                        onCaptureMedia = { vm.updateStatusMessage("Camera capture integration pending on this build.") },
                         onSave = { vm.saveSop(::goBack) },
                     )
                 }
