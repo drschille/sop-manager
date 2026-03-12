@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 import no.designsolutions.sopmanager.composeapp.logging.AppLogger
 import no.designsolutions.sopmanager.composeapp.model.PartSearchResult
 import no.designsolutions.sopmanager.composeapp.model.ProcedureDetail
@@ -185,9 +186,28 @@ class AppViewModel(
         sopBody = latest.body
         editSteps.clear()
         if (latest.photos.isEmpty()) {
-            editSteps.add(StepDraft(description = latest.body))
+            val parsedSteps = parseStepDescriptions(latest.body)
+            if (parsedSteps.isEmpty()) {
+                editSteps.add(StepDraft())
+            } else {
+                editSteps.addAll(parsedSteps.map { StepDraft(description = it) })
+            }
         } else {
-            editSteps.addAll(latest.photos.map { StepDraft(description = it.description.orEmpty()) })
+            editSteps.addAll(
+                latest.photos.map { photo ->
+                    StepDraft(
+                        description = photo.description.orEmpty(),
+                        media = listOf(
+                            StepMedia(
+                                uri = photo.previewUrl.orEmpty(),
+                                type = StepMediaType.Image,
+                                label = photo.description,
+                                storageId = photo.storageId,
+                            ),
+                        ),
+                    )
+                },
+            )
         }
     }
 
@@ -197,19 +217,29 @@ class AppViewModel(
             loading = true
             statusMessage = null
             try {
+                val serializedSteps = serializeStepDescriptions(editSteps)
+                val bodyToSave = serializedSteps.ifBlank { sopBody }
                 val photos = editSteps
-                    .flatMap { it.media }
-                    .filter { it.storageId.isNotBlank() }
-                    .map { PhotoPayload(storageId = it.storageId, description = it.label) }
+                    .flatMap { step ->
+                        step.media
+                            .filter { it.storageId.isNotBlank() }
+                            .map { media ->
+                                PhotoPayload(
+                                    storageId = media.storageId,
+                                    description = step.description.ifBlank { null },
+                                )
+                            }
+                    }
 
                 val procedureId = currentDetail?.procedureId
                 if (procedureId.isNullOrBlank()) {
-                    repository.saveNew(partNumber, sopTitle, sopBody, photos)
+                    repository.saveNew(partNumber, sopTitle, bodyToSave, photos)
                     AppLogger.i("Created new SOP for part: $partNumber")
                 } else {
-                    repository.saveEdit(procedureId, sopTitle, sopBody, photos)
+                    repository.saveEdit(procedureId, sopTitle, bodyToSave, photos)
                     AppLogger.i("Saved SOP edit for procedure: $procedureId")
                 }
+                sopBody = bodyToSave
                 statusMessage = "SOP saved"
                 loadProcedureByPart(partNumber) { onSaved() }
             } catch (error: Throwable) {
@@ -292,8 +322,24 @@ class AppViewModel(
     }
 }
 
+private fun parseStepDescriptions(body: String): List<String> {
+    return body
+        .lineSequence()
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+        .toList()
+}
+
+private fun serializeStepDescriptions(steps: List<StepDraft>): String {
+    return steps
+        .map { it.description.trim() }
+        .filter { it.isNotEmpty() }
+        .joinToString("\n")
+}
+
 
 data class StepDraft(
+    val id: String = Random.nextLong().toString(),
     val description: String = "",
     val media: List<StepMedia> = emptyList(),
 )

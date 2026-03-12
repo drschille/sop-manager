@@ -19,6 +19,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import no.designsolutions.sopmanager.composeapp.StepDraft
 
@@ -51,8 +52,9 @@ fun EditSopScreen(
     )
 
     Text("Steps")
+    val dragThresholdPx = with(LocalDensity.current) { 36.dp.toPx() }
     LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        itemsIndexed(steps) { index, step ->
+        itemsIndexed(steps, key = { _, step -> step.id }) { index, step ->
             val dragDistance = remember { mutableFloatStateOf(0f) }
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -67,10 +69,10 @@ fun EditSopScreen(
                                 ) { change, dragAmount ->
                                     change.consume()
                                     dragDistance.floatValue += dragAmount.y
-                                    if (dragDistance.floatValue > 36f && index < steps.lastIndex) {
+                                    if (dragDistance.floatValue > dragThresholdPx && index < steps.lastIndex) {
                                         onMoveStep(index, index + 1)
                                         dragDistance.floatValue = 0f
-                                    } else if (dragDistance.floatValue < -36f && index > 0) {
+                                    } else if (dragDistance.floatValue < -dragThresholdPx && index > 0) {
                                         onMoveStep(index, index - 1)
                                         dragDistance.floatValue = 0f
                                     }
