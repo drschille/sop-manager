@@ -4,5 +4,13 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access is required to scan QR codes and capture step photos and videos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Photo library access is required to attach photos and videos to SOP steps.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Photo library write access is required to save captured SOP media.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Microphone access is required when capturing SOP videos with sound.</string>
 </dict>
 </plist>
