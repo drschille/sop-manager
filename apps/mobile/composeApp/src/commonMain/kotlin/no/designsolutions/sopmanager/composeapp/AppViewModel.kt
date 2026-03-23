@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 import no.designsolutions.sopmanager.composeapp.logging.AppLogger
 import no.designsolutions.sopmanager.composeapp.model.PartSearchResult
 import no.designsolutions.sopmanager.composeapp.model.ProcedureDetail
@@ -32,7 +33,7 @@ class AppViewModel(
 
     val versionList = mutableStateListOf<SopVersion>()
     val searchResults = mutableStateListOf<PartSearchResult>()
-    val editPhotoDescriptions = mutableStateListOf<String>()
+    val editSteps = mutableStateListOf<StepDraft>()
 
     var signedInUser by mutableStateOf("mock-user@local")
         private set
@@ -64,10 +65,40 @@ class AppViewModel(
         sopBody = value
     }
 
-    fun updatePhotoDescription(index: Int, value: String) {
-        if (index in editPhotoDescriptions.indices) {
-            editPhotoDescriptions[index] = value
+    fun addStep() {
+        editSteps.add(StepDraft())
+    }
+
+    fun removeStep(index: Int) {
+        if (index in editSteps.indices) {
+            editSteps.removeAt(index)
         }
+    }
+
+    fun moveStep(fromIndex: Int, toIndex: Int) {
+        if (fromIndex !in editSteps.indices || toIndex !in editSteps.indices || fromIndex == toIndex) return
+        val step = editSteps.removeAt(fromIndex)
+        editSteps.add(toIndex, step)
+    }
+
+    fun updateStepDescription(index: Int, value: String) {
+        if (index in editSteps.indices) {
+            editSteps[index] = editSteps[index].copy(description = value)
+        }
+    }
+
+    fun addStepMedia(index: Int, media: StepMedia) {
+        if (index !in editSteps.indices) return
+        val updated = editSteps[index].media + media
+        editSteps[index] = editSteps[index].copy(media = updated)
+    }
+
+    fun removeStepMedia(stepIndex: Int, mediaIndex: Int) {
+        if (stepIndex !in editSteps.indices) return
+        val current = editSteps[stepIndex]
+        if (mediaIndex !in current.media.indices) return
+        val updated = current.media.toMutableList().apply { removeAt(mediaIndex) }
+        editSteps[stepIndex] = current.copy(media = updated)
     }
 
     fun signInMock(onSignedIn: () -> Unit) {
@@ -144,7 +175,8 @@ class AppViewModel(
         AppLogger.d("Preparing create SOP state for part: $partNumber")
         sopTitle = ""
         sopBody = ""
-        editPhotoDescriptions.clear()
+        editSteps.clear()
+        editSteps.add(StepDraft())
     }
 
     fun prepareEditSopFromLatest() {
@@ -152,8 +184,31 @@ class AppViewModel(
         AppLogger.d("Preparing edit state from latest SOP version: ${latest.versionNumber}")
         sopTitle = latest.title
         sopBody = latest.body
-        editPhotoDescriptions.clear()
-        editPhotoDescriptions.addAll(latest.photos.map { it.description.orEmpty() })
+        editSteps.clear()
+        if (latest.photos.isEmpty()) {
+            val parsedSteps = parseStepDescriptions(latest.body)
+            if (parsedSteps.isEmpty()) {
+                editSteps.add(StepDraft())
+            } else {
+                editSteps.addAll(parsedSteps.map { StepDraft(description = it) })
+            }
+        } else {
+            editSteps.addAll(
+                latest.photos.map { photo ->
+                    StepDraft(
+                        description = photo.description.orEmpty(),
+                        media = listOf(
+                            StepMedia(
+                                uri = photo.previewUrl.orEmpty(),
+                                type = StepMediaType.Image,
+                                label = photo.description,
+                                storageId = photo.storageId,
+                            ),
+                        ),
+                    )
+                },
+            )
+        }
     }
 
     fun saveSop(onSaved: () -> Unit) {
@@ -162,19 +217,29 @@ class AppViewModel(
             loading = true
             statusMessage = null
             try {
-                val photos = editPhotoDescriptions
-                    .filter { it.isNotBlank() }
-                    .map { PhotoPayload(storageId = "", description = it) }
-                    .filter { it.storageId.isNotBlank() }
+                val serializedSteps = serializeStepDescriptions(editSteps)
+                val bodyToSave = serializedSteps.ifBlank { sopBody }
+                val photos = editSteps
+                    .flatMap { step ->
+                        step.media
+                            .filter { it.storageId.isNotBlank() }
+                            .map { media ->
+                                PhotoPayload(
+                                    storageId = media.storageId,
+                                    description = step.description.ifBlank { null },
+                                )
+                            }
+                    }
 
                 val procedureId = currentDetail?.procedureId
                 if (procedureId.isNullOrBlank()) {
-                    repository.saveNew(partNumber, sopTitle, sopBody, emptyList())
+                    repository.saveNew(partNumber, sopTitle, bodyToSave, photos)
                     AppLogger.i("Created new SOP for part: $partNumber")
                 } else {
-                    repository.saveEdit(procedureId, sopTitle, sopBody, photos)
+                    repository.saveEdit(procedureId, sopTitle, bodyToSave, photos)
                     AppLogger.i("Saved SOP edit for procedure: $procedureId")
                 }
+                sopBody = bodyToSave
                 statusMessage = "SOP saved"
                 loadProcedureByPart(partNumber) { onSaved() }
             } catch (error: Throwable) {
@@ -256,3 +321,34 @@ class AppViewModel(
         super.onCleared()
     }
 }
+
+private fun parseStepDescriptions(body: String): List<String> {
+    return body
+        .lineSequence()
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+        .toList()
+}
+
+private fun serializeStepDescriptions(steps: List<StepDraft>): String {
+    return steps
+        .map { it.description.trim() }
+        .filter { it.isNotEmpty() }
+        .joinToString("\n")
+}
+
+
+data class StepDraft(
+    val id: String = Random.nextLong().toString(),
+    val description: String = "",
+    val media: List<StepMedia> = emptyList(),
+)
+
+enum class StepMediaType { Image, Video }
+
+data class StepMedia(
+    val uri: String,
+    val type: StepMediaType,
+    val label: String? = null,
+    val storageId: String = "",
+)
